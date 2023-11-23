@@ -5,11 +5,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.co.tech263.AccountManagmentService.dto.Customer;
+import zw.co.tech263.AccountManagmentService.dto.StatusUpdate;
 import zw.co.tech263.AccountManagmentService.exception.AccountNotFoundException;
 import zw.co.tech263.AccountManagmentService.exception.InvalidAccountTypeException;
+import zw.co.tech263.AccountManagmentService.exception.InvalidStatusException;
 import zw.co.tech263.AccountManagmentService.service.AccountManagementServiceImp;
 
 @RestController
+@RequestMapping("/api/v1/accounts")
 public class AccountManagementController {
 
 
@@ -17,7 +20,7 @@ public class AccountManagementController {
     AccountManagementServiceImp accountManagementService;
 
 
-    @PostMapping("/account")
+    @PostMapping
     public ResponseEntity addNewAccount(@RequestBody Customer customer){
         try{
             return ResponseEntity.ok(accountManagementService.addAccount(customer));
@@ -29,11 +32,11 @@ public class AccountManagementController {
 
     }
 
-    @GetMapping("/account")
+    @GetMapping
     public ResponseEntity getAllAccounts(){
         return accountManagementService.getAllAccount();
     }
-    @GetMapping("/account/{accountNumber}")
+    @GetMapping("{accountNumber}")
     public ResponseEntity getAccountByAccountNumber(@PathVariable String accountNumber){
         try {
 
@@ -44,20 +47,49 @@ public class AccountManagementController {
             return ResponseEntity.notFound().build();
         }
     }
+
+
+    @PutMapping
+    public ResponseEntity updateAccount(@RequestBody Customer customer){
+
+        try {
+
+            return ResponseEntity.ok(
+                    accountManagementService.updateAccount(customer)
+            );
+        }catch (AccountNotFoundException anf){
+            return ResponseEntity.notFound().build();
+        } catch (InvalidAccountTypeException iate) {
+            return ResponseEntity.badRequest().body(iate.getMessage());
+        }
+
+    }
+
+
+    @PutMapping("/{accountNumber}/status")
+    public ResponseEntity updateAccountStatus(@PathVariable String  accountNumber,@RequestBody StatusUpdate statusUpdate){
+
+        try {
+            return ResponseEntity.ok(
+                    accountManagementService.updateAccountStatus(statusUpdate,accountNumber)
+            );
+        }catch (AccountNotFoundException anf){
+            return ResponseEntity.notFound().build();
+        } catch (InvalidStatusException ise) {
+            return ResponseEntity.badRequest().body(ise.getMessage());
+        }
+    }
+
+
 /*
-    public ResponseEntity updateAccount(){
 
-    }
-
-    public ResponseEntity getAccountDetails(String id){
-
-    }
 
     public ResponseEntity getAccountBalance(){
 
     }
 
-    public ResponseEntity getLast10Ttrasactions(){
+
+    public void setAccountBalance(){
 
     }
 

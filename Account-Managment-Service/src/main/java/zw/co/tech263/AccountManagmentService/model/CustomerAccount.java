@@ -1,6 +1,7 @@
 package zw.co.tech263.AccountManagmentService.model;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -19,6 +20,7 @@ public class CustomerAccount {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @JsonIgnore
     private long id;
     private final String accountNumber= getNewAccountNumber();
     private String firstName;
@@ -28,7 +30,7 @@ public class CustomerAccount {
 
     private final BigDecimal accountBalance=new BigDecimal(0);
 
-    private final AccountStatus accountStatus=AccountStatus.ACTIVE;
+    private AccountStatus accountStatus=AccountStatus.ACTIVE;
 
     private final long accountCreated= Instant.now().toEpochMilli();
 
