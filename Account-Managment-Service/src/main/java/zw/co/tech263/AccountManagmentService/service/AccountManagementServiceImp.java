@@ -3,7 +3,6 @@ package zw.co.tech263.AccountManagmentService.service;
 
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
@@ -29,7 +28,6 @@ import java.util.Objects;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.web.client.RestTemplate;
 
 @Service
 public class AccountManagementServiceImp implements AccountManagementService{
@@ -42,24 +40,18 @@ public class AccountManagementServiceImp implements AccountManagementService{
     RestTemplate restTemplate;
 
     @Override
-    public CustomerAccount addAccount(Customer account) throws InvalidAccountTypeException, AccountNotFoundException {
+    public CustomerAccount addAccount(Customer account) throws InvalidAccountTypeException, AccountNotFoundException, URISyntaxException {
 
-        boolean isValidAccountType = Arrays.stream(AccountType.values())
-                .anyMatch(accountType -> accountType.name().equals(account.getAccountType()));
-        if(isValidAccountType){
             CustomerAccount customerAccount=CustomerAccount.builder()
                     .firstName(account.getFirstName())
                     .lastName(account.getLastName())
                     .address(account.getAddress())
                     .accountStatus(AccountStatus.ACTIVE)
-                    .accountType(AccountType.valueOf(account.getAccountType()))
+                    .accountType(getValidAccountType(account))
                     .build();
             customerAccount =accountRepository.save(customerAccount);
             addAccountToTransactionService(customerAccount.getAccountNumber());
             return customerAccount;
-        }else{
-            throw new InvalidAccountTypeException("Invalid account type:"+account.getAccountType()+". Was expecting "+Arrays.toString(AccountType.values()));
-        }
 
     }
 
@@ -76,19 +68,8 @@ public class AccountManagementServiceImp implements AccountManagementService{
 
 
     public CustomerAccount updateAccount(Customer account) throws InvalidAccountTypeException ,AccountNotFoundException{
-
         CustomerAccount customerAccount=getAccountByAccountNumber(account.getAccountNumber());
-        if(account.getAccountType()!=null) {
-            boolean isValidAccountType = Arrays.stream(AccountType.values())
-                    .anyMatch(accountType -> accountType.name().equals(account.getAccountType()));
-            if (isValidAccountType) {
-                customerAccount.setAccountType(AccountType.valueOf(account.getAccountType()));
-            } else {
-                throw new InvalidAccountTypeException("Invalid account type:" + account.getAccountType() + ". Was expecting " + Arrays.toString(AccountType.values()));
-            }
-        }
-
-
+        customerAccount.setAccountType(getValidAccountType(account));
         customerAccount.setFirstName(Objects.requireNonNullElse(account.getFirstName(), customerAccount.getFirstName()));
         customerAccount.setLastName(Objects.requireNonNullElse(account.getLastName(), customerAccount.getLastName()));
         customerAccount.setAddress(Objects.requireNonNullElse(account.getAddress(), customerAccount.getAddress()));
@@ -98,8 +79,7 @@ public class AccountManagementServiceImp implements AccountManagementService{
 
     public CustomerAccount updateAccountStatus(StatusUpdate statusUpdate,String accountNumber) throws InvalidStatusException ,AccountNotFoundException{
 
-        CustomerAccount customerAccount=getAccountByAccountNumber(accountNumber);
-
+            CustomerAccount customerAccount=getAccountByAccountNumber(accountNumber);
             boolean isValidStatus = Arrays.stream(AccountStatus.values())
                     .anyMatch(accountStatus -> accountStatus.name().equals(statusUpdate.getStatus()));
             if (isValidStatus) {
@@ -107,34 +87,36 @@ public class AccountManagementServiceImp implements AccountManagementService{
             } else {
                 throw new InvalidStatusException("Invalid status:" + statusUpdate.getStatus() + ". Was expecting " + Arrays.toString(AccountStatus.values()));
             }
-
-
-
-
-        return accountRepository.save(customerAccount);
+            return accountRepository.save(customerAccount);
 
     }
 
-    public void addAccountToTransactionService(String accountNumber) throws AccountNotFoundException {
-
-        try {
+    public void addAccountToTransactionService(String accountNumber) throws AccountNotFoundException, URISyntaxException {
 
             URI uri = new URI("https://TRANSACTION-PROCESSING-SERVICE/"+"api/v1/accounts");
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
             MultiValueMap<String, String> requestParams = new LinkedMultiValueMap<>();
             requestParams.add("accountNumber", accountNumber);
-
             HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(requestParams, headers);
-
             restTemplate.postForObject(uri, requestEntity, Customer.class);
 
+    }
 
-        } catch (URISyntaxException e) {
-            throw new RuntimeException(e);
+    private AccountType getValidAccountType(Customer account) throws InvalidAccountTypeException {
+        if(account.getAccountType()!=null) {
+            boolean isValidAccountType = Arrays.stream(AccountType.values())
+                    .anyMatch(accountType -> accountType.name().equals(account.getAccountType()));
+            if (isValidAccountType) {
+                return AccountType.valueOf(account.getAccountType());
+            }
+            throw new InvalidAccountTypeException("Invalid account type:" + account.getAccountType() + ". expecting any of the following " + Arrays.toString(AccountType.values()));
+
         }
-
+        throw new InvalidAccountTypeException("Missing account type .Was expecting any of the following " + Arrays.toString(AccountType.values()));
 
     }
+
+
 
 }
