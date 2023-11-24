@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import zw.co.tech263.TransactionProcessingService.exception.AccountNotActiveException;
 import zw.co.tech263.TransactionProcessingService.exception.AccountNotFoundException;
 import zw.co.tech263.TransactionProcessingService.exception.InsufficientFundsException;
 import zw.co.tech263.TransactionProcessingService.exception.TransactionsNotFoundException;
@@ -29,12 +30,12 @@ public class AccountController {
         return accountService.addNewCustomerAccount(accountNumber);
     }
     @PostMapping("/{accountNumber}/deposit")
-    public void deposit(@PathVariable("accountNumber") String accountNumber, @RequestParam("amount") BigDecimal amount,@RequestParam("purpose") String description) throws AccountNotFoundException {
+    public void deposit(@PathVariable("accountNumber") String accountNumber, @RequestParam("amount") BigDecimal amount,@RequestParam("purpose") String description) throws AccountNotFoundException, AccountNotActiveException {
         accountService.deposit(accountNumber, amount,description);
     }
 
     @PostMapping("/{accountNumber}/withdraw")
-    public void withdraw(@PathVariable("accountNumber") String accountNumber, @RequestParam("amount") BigDecimal amount,@RequestParam("purpose") String description) throws InsufficientFundsException, AccountNotFoundException {
+    public void withdraw(@PathVariable("accountNumber") String accountNumber, @RequestParam("amount") BigDecimal amount,@RequestParam("purpose") String description) throws InsufficientFundsException, AccountNotFoundException, AccountNotActiveException {
         accountService.withdraw(accountNumber, amount,description);
     }
 
@@ -57,7 +58,7 @@ public class AccountController {
         accountService.transferFunds(accountNumber, destinationaccountNumber, amount,description);
     }
 
-    @ExceptionHandler({AccountNotFoundException.class, InsufficientFundsException.class,AccountNotFoundException.class})
+    @ExceptionHandler({AccountNotFoundException.class, InsufficientFundsException.class,AccountNotFoundException.class,AccountNotActiveException.class})
     public ResponseEntity<String> handleAccountExceptions(Exception ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
     }

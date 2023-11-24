@@ -32,6 +32,8 @@ public class AccountController {
         }catch (InvalidAccountTypeException iate){
             return ResponseEntity.badRequest().body(iate.getMessage());
 
+        } catch (AccountNotFoundException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
 
 

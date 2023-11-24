@@ -3,8 +3,12 @@ package zw.co.tech263.AccountManagmentService.service;
 
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
 import zw.co.tech263.AccountManagmentService.dto.Customer;
 import zw.co.tech263.AccountManagmentService.dto.StatusUpdate;
 import zw.co.tech263.AccountManagmentService.exception.AccountNotFoundException;
@@ -14,9 +18,18 @@ import zw.co.tech263.AccountManagmentService.model.AccountStatus;
 import zw.co.tech263.AccountManagmentService.model.AccountType;
 import zw.co.tech263.AccountManagmentService.model.CustomerAccount;
 import zw.co.tech263.AccountManagmentService.repository.AccountRepository;
+
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+
+
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.web.client.RestTemplate;
 
 @Service
 public class AccountManagementServiceImp implements AccountManagementService{
@@ -24,8 +37,12 @@ public class AccountManagementServiceImp implements AccountManagementService{
 
     @Autowired
     AccountRepository accountRepository;
+
+    @Autowired
+    RestTemplate restTemplate;
+
     @Override
-    public CustomerAccount addAccount(Customer account) throws InvalidAccountTypeException {
+    public CustomerAccount addAccount(Customer account) throws InvalidAccountTypeException, AccountNotFoundException {
 
         boolean isValidAccountType = Arrays.stream(AccountType.values())
                 .anyMatch(accountType -> accountType.name().equals(account.getAccountType()));
@@ -34,9 +51,12 @@ public class AccountManagementServiceImp implements AccountManagementService{
                     .firstName(account.getFirstName())
                     .lastName(account.getLastName())
                     .address(account.getAddress())
+                    .accountStatus(AccountStatus.ACTIVE)
                     .accountType(AccountType.valueOf(account.getAccountType()))
                     .build();
-            return accountRepository.save(customerAccount);
+            customerAccount =accountRepository.save(customerAccount);
+            addAccountToTransactionService(customerAccount.getAccountNumber());
+            return customerAccount;
         }else{
             throw new InvalidAccountTypeException("Invalid account type:"+account.getAccountType()+". Was expecting "+Arrays.toString(AccountType.values()));
         }
@@ -92,6 +112,28 @@ public class AccountManagementServiceImp implements AccountManagementService{
 
 
         return accountRepository.save(customerAccount);
+
+    }
+
+    public void addAccountToTransactionService(String accountNumber) throws AccountNotFoundException {
+
+        try {
+
+            URI uri = new URI("https://TRANSACTION-PROCESSING-SERVICE/"+"api/v1/accounts");
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+            MultiValueMap<String, String> requestParams = new LinkedMultiValueMap<>();
+            requestParams.add("accountNumber", accountNumber);
+
+            HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(requestParams, headers);
+
+            restTemplate.postForObject(uri, requestEntity, Customer.class);
+
+
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
+
 
     }
 

@@ -30,7 +30,7 @@ public class CustomerAccount {
 
     private final BigDecimal accountBalance=new BigDecimal(0);
 
-    private AccountStatus accountStatus=AccountStatus.ACTIVE;
+    private AccountStatus accountStatus;
 
     private final long accountCreated= Instant.now().toEpochMilli();
 
