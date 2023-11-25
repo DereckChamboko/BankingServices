@@ -2,7 +2,7 @@ package zw.co.tech263.CustomerSupportService.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import zw.co.tech263.CustomerSupportService.dto.OpenTicketDTO;
+import zw.co.tech263.CustomerSupportService.dto.request.OpenTicketDTO;
 import zw.co.tech263.CustomerSupportService.exception.*;
 import zw.co.tech263.CustomerSupportService.model.*;
 import zw.co.tech263.CustomerSupportService.repository.CustomerAccountRepository;

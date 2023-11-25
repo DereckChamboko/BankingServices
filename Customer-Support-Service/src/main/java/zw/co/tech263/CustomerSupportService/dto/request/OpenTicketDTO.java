@@ -1,4 +1,4 @@
-package zw.co.tech263.CustomerSupportService.dto;
+package zw.co.tech263.CustomerSupportService.dto.request;
 
 import jakarta.annotation.security.DenyAll;
 import lombok.AllArgsConstructor;
