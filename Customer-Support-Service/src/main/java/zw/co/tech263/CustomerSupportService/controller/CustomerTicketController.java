@@ -4,6 +4,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import zw.co.tech263.CustomerSupportService.dto.request.ActivityDTO;
+import zw.co.tech263.CustomerSupportService.dto.request.CommentDTO;
+import zw.co.tech263.CustomerSupportService.dto.request.CustomerAccountDTO;
 import zw.co.tech263.CustomerSupportService.dto.respose.ErrorResponse;
 import zw.co.tech263.CustomerSupportService.dto.request.OpenTicketDTO;
 import zw.co.tech263.CustomerSupportService.exception.*;
@@ -28,7 +31,7 @@ public class CustomerTicketController {
 
     // Create a customer account
     @PostMapping("/customer-accounts")
-    public ResponseEntity<CustomerAccount> createCustomerAccount(@RequestBody CustomerAccount customerAccount) throws DuplicateAccountException {
+    public ResponseEntity<CustomerAccount> createCustomerAccount(@RequestBody CustomerAccountDTO customerAccount) throws DuplicateAccountException {
         CustomerAccount createdAccount = customerAccountService.createCustomerAccount(customerAccount);
         return new ResponseEntity<>(createdAccount, HttpStatus.CREATED);
     }
@@ -68,15 +71,16 @@ public class CustomerTicketController {
 
     // Add a comment to a ticket
     @PostMapping("/tickets/{ticketId}/comments")
-    public ResponseEntity<Ticket> addCommentToTicket(@PathVariable("ticketId") String ticketId, @RequestBody Comment comment) throws TicketNotFoundException {
+    public ResponseEntity<Ticket> addCommentToTicket(@PathVariable("ticketId") String ticketId, @RequestBody CommentDTO comment) throws TicketNotFoundException {
         Ticket ticketWithComment = ticketService.addCommentToTicket(ticketId, comment);
         return new ResponseEntity<>(ticketWithComment, HttpStatus.OK);
     }
 
     // Add an activity to a ticket
     @PostMapping("/tickets/{ticketId}/activities")
-    public ResponseEntity<Ticket> addActivityToTicket(@PathVariable("ticketId") String ticketId, @RequestBody Activity activity) throws TicketNotFoundException {
-        Ticket ticketWithActivity = ticketService.addActivityToTicket(ticketId, activity);
+    public ResponseEntity<Ticket> addActivityToTicket(@PathVariable("ticketId") String ticketId, @RequestBody ActivityDTO activityDto) throws TicketNotFoundException {
+
+        Ticket ticketWithActivity = ticketService.addActivityToTicket(ticketId, activityDto);
         return new ResponseEntity<>(ticketWithActivity, HttpStatus.OK);
     }
 

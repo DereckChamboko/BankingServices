@@ -2,6 +2,9 @@ package zw.co.tech263.CustomerSupportService.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import zw.co.tech263.CustomerSupportService.dto.message.RabbitMQMessageOut;
+import zw.co.tech263.CustomerSupportService.dto.request.ActivityDTO;
+import zw.co.tech263.CustomerSupportService.dto.request.CommentDTO;
 import zw.co.tech263.CustomerSupportService.dto.request.OpenTicketDTO;
 import zw.co.tech263.CustomerSupportService.exception.*;
 import zw.co.tech263.CustomerSupportService.model.*;
@@ -19,11 +22,16 @@ public class TicketService {
     private final TicketRepository ticketRepository;
     private final CustomerAccountRepository customerAccountRepository;
 
+    private final NotificationService notificationService;
+
 
     @Autowired
-    public TicketService(TicketRepository ticketRepository,CustomerAccountRepository customerAccountRepository) {
+    public TicketService(TicketRepository ticketRepository,
+                         CustomerAccountRepository customerAccountRepository,
+                         NotificationService notificationService) {
         this.ticketRepository = ticketRepository;
         this.customerAccountRepository=customerAccountRepository;
+        this.notificationService=notificationService;
     }
 
     public Ticket createTicket(OpenTicketDTO openTicketDTO) throws TicketCategoryNotFoundException, AccountNotFoundException {
@@ -36,7 +44,17 @@ public class TicketService {
                 .ticketCategory(getValidTicketCategory(openTicketDTO.getTicketCategory()))
                 .description(openTicketDTO.getDescription())
                 .build();
-        return ticketRepository.save(ticket);
+
+
+
+        ticket=ticketRepository.save(ticket);
+        RabbitMQMessageOut message=RabbitMQMessageOut.builder()
+                .messageTittle("New Ticket created")
+                .accountNumber(customerAccount.getAccountNumber())
+                .message("We have opened a new ticket with tittle "+ticket.getTitle()+" was opened. this ticket will be tracked with ticket ID:"+ticket.getId() )
+                .build();
+        notificationService.sendNotification(message);
+        return ticket;
 
     }
 
@@ -51,14 +69,20 @@ public class TicketService {
             throw new TicketAlreadyResolvedException("Ticket is already resolved.");
         }
 
-        Activity activity=Activity.builder()
-                .userId(user)
-                .activityDate(Instant.now().toEpochMilli())
+        ActivityDTO activity=ActivityDTO.builder()
+                .user(user)
                 .description("Ticket resolved: "+reason)
                 .build();
         ticket=addActivityToTicket(ticketId,activity);
         ticket.setStatus(TicketStatus.RESOLVED);
 
+
+        RabbitMQMessageOut message=RabbitMQMessageOut.builder()
+                .messageTittle("Ticket "+ticketId+ " was resolved")
+                .accountNumber(ticket.getCustomerAccount().getAccountNumber())
+                .message("Ticket "+ticketId+ " was resolved with resolution "+reason )
+                .build();
+        notificationService.sendNotification(message);
         return ticketRepository.save(ticket);
     }
 
@@ -68,9 +92,8 @@ public class TicketService {
             throw new TicketAlreadyOpenException("Ticket is already open.");
         }
 
-        Activity activity=Activity.builder()
-                .userId(user)
-                .activityDate(Instant.now().toEpochMilli())
+        ActivityDTO activity=ActivityDTO.builder()
+                .user(user)
                 .description("Ticket re-opened because "+reason)
                 .build();
         ticket =addActivityToTicket(ticketId,activity);
@@ -78,22 +101,33 @@ public class TicketService {
         return ticketRepository.save(ticket);
     }
 
-    public Ticket addCommentToTicket(String ticketId, Comment comment) throws TicketNotFoundException {
+    public Ticket addCommentToTicket(String ticketId, CommentDTO comment) throws TicketNotFoundException {
 
         Ticket ticket = getTicketById(ticketId);
-        comment.setCommentDate(Instant.now().toEpochMilli());
+        Comment commentRequest=Comment.builder()
+                .userId(comment.getUser())
+                .commentDate(Instant.now().toEpochMilli())
+                .commentText(comment.getCommentText())
+                .build();
+
 
         List<Comment> listOfComments = ticket.getComments();
         if (listOfComments == null) {
             listOfComments = new ArrayList<>();
         }
-        listOfComments.add(comment);
+        listOfComments.add(commentRequest);
         ticket.setComments(listOfComments);
 
         return ticketRepository.save(ticket);
     }
 
-    public Ticket addActivityToTicket(String ticketId, Activity activity) throws TicketNotFoundException {
+    public Ticket addActivityToTicket(String ticketId, ActivityDTO activityDto) throws TicketNotFoundException {
+
+        Activity activity= Activity.builder()
+                .activityDate(Instant.now().toEpochMilli())
+                .userId(activityDto.getUser())
+                .description(activityDto.getDescription())
+                .build();
 
         Ticket ticket = getTicketById(ticketId);
         activity.setActivityDate(Instant.now().toEpochMilli());
