@@ -25,10 +25,7 @@ public class AccountController {
         this.accountService = accountService;
     }
 
-    @PostMapping()
-    public Account addAccount(@RequestParam("accountNumber") String accountNumber) throws AccountNotFoundException {
-        return accountService.addNewCustomerAccount(accountNumber);
-    }
+
     @PostMapping("/{accountNumber}/deposit")
     public void deposit(@PathVariable("accountNumber") String accountNumber, @RequestParam("amount") BigDecimal amount,@RequestParam("purpose") String description) throws AccountNotFoundException, AccountNotActiveException {
         accountService.deposit(accountNumber, amount,description);

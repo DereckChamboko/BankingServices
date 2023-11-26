@@ -7,14 +7,22 @@ import org.springframework.stereotype.Service;
 import zw.co.tech263.AccountManagmentService.RabbitMQConfig;
 import zw.co.tech263.AccountManagmentService.dto.messaging.CustomerSupportAccountMessage;
 import zw.co.tech263.AccountManagmentService.dto.messaging.NotificationMessage;
+import zw.co.tech263.AccountManagmentService.dto.messaging.TransactionServiceMessage;
 
 
 @Service
 public class MessagingService {
 
 
+
+    private final RabbitTemplate template;
+
+
     @Autowired
-    RabbitTemplate template;
+    public MessagingService(RabbitTemplate template){
+        this.template=template;
+
+    }
 
 
     public void sendNotification(NotificationMessage notificationMessage){
@@ -25,5 +33,10 @@ public class MessagingService {
     public void createCustomerSupportAccount(CustomerSupportAccountMessage message){
         template.convertAndSend(RabbitMQConfig.EXCHANGE_NAME,
                 RabbitMQConfig.CUSTOMER_SERVICES_ROUTING_KEY, message);
+    }
+
+    public void createTransactionServiceAccount(TransactionServiceMessage message){
+        template.convertAndSend(RabbitMQConfig.EXCHANGE_NAME,
+                RabbitMQConfig.TRANSACTION_ROUTING_KEY, message);
     }
 }

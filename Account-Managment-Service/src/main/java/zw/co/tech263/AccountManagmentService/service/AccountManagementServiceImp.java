@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
+import zw.co.tech263.AccountManagmentService.dto.messaging.TransactionServiceMessage;
 import zw.co.tech263.AccountManagmentService.dto.request.CustomerCreationDto;
 import zw.co.tech263.AccountManagmentService.dto.request.CustomerUpdateDto;
 import zw.co.tech263.AccountManagmentService.dto.StatusUpdate;
@@ -67,8 +68,8 @@ public class AccountManagementServiceImp {
             messagingService.createCustomerSupportAccount(new CustomerSupportAccountMessage(customerAccount.getAccountNumber()));
 
 
+            messagingService.createTransactionServiceAccount(new TransactionServiceMessage(customerAccount.getAccountNumber()));
 
-            addAccountToTransactionService(customerAccount.getAccountNumber());
             return customerAccount;
 
     }
@@ -106,18 +107,6 @@ public class AccountManagementServiceImp {
                 throw new InvalidStatusException("Invalid status:" + statusUpdate.getStatus() + ". Was expecting " + Arrays.toString(AccountStatus.values()));
             }
             return accountRepository.save(customerAccount);
-
-    }
-
-    public void addAccountToTransactionService(String accountNumber) throws AccountNotFoundException, URISyntaxException {
-
-            URI uri = new URI("https://TRANSACTION-PROCESSING-SERVICE/"+"api/v1/accounts");
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-            MultiValueMap<String, String> requestParams = new LinkedMultiValueMap<>();
-            requestParams.add("accountNumber", accountNumber);
-            HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(requestParams, headers);
-            restTemplate.postForObject(uri, requestEntity, CustomerUpdateDto.class);
 
     }
 

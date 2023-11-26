@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Configuration;
 public class RabbitMQConfig {
 
     public static final String NOTIFICATION_QUEUE = "Equals_Account_notification";
-    public static final String TRANSACTION_PROCESSING_QUEUE = "Equals_Account_processing";
+    public static final String TRANSACTION_PROCESSING_QUEUE = "Equals_Transaction_processing";
     public static final String CUSTOMER_SERVICES_QUEUE = "Equals_Account_customer_services";
     public static final String EXCHANGE_NAME = "Equals.exchange";
     public static final String NOTIFICATION_ROUTING_KEY = "Equals.customer.notification";
