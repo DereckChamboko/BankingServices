@@ -1,4 +1,4 @@
-package zw.co.tech263.CustomerSupportService.config;
+package zw.co.tech263.CustomerSupportService;
 
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
@@ -14,19 +14,18 @@ import java.util.UUID;
 @Configuration
 public class RabbitMQConfig {
 
-    public static final String QUEUE = "Equals_Account_notification";
-    public static final String EXCHANGE = "Equals.exchange";
-    public static final String QUEUE_ROUTING_KEY = "Equals.account.management.service." + UUID.randomUUID();
-    public static final String ROUTING_KEY = "Equals.account.management.service.#";
+    public static final String QUEUE_NAME = "Equals_Account_notification";
+    public static final String EXCHANGE_NAME = "Equals.exchange";
+    public static final String ROUTING_KEY = "Equals.customer.notification";
 
     @Bean
     public Queue queue() {
-        return new Queue(QUEUE);
+        return new Queue(QUEUE_NAME);
     }
 
     @Bean
     public TopicExchange exchange() {
-        return new TopicExchange(EXCHANGE);
+        return new TopicExchange(EXCHANGE_NAME);
     }
 
     @Bean

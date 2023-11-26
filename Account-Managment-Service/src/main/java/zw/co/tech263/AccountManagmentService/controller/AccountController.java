@@ -9,7 +9,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
-import zw.co.tech263.AccountManagmentService.dto.Customer;
+import zw.co.tech263.AccountManagmentService.dto.request.CustomerCreationDto;
+import zw.co.tech263.AccountManagmentService.dto.request.CustomerUpdateDto;
 import zw.co.tech263.AccountManagmentService.dto.StatusUpdate;
 import zw.co.tech263.AccountManagmentService.exception.AccountNotFoundException;
 import zw.co.tech263.AccountManagmentService.exception.InvalidAccountTypeException;
@@ -29,11 +30,11 @@ public class AccountController {
 
     @PostMapping
     @Operation(summary = "Create Account", description = "Creates a new account and sets it as active. Returns the complete account details.")
-    @ApiResponse(responseCode = "200", description = "Successful operation. New account created.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Customer.class)))
+    @ApiResponse(responseCode = "200", description = "Successful operation. New account created.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = CustomerUpdateDto.class)))
     @ApiResponse(responseCode = "400", description = "Invalid account type provided. The request is malformed.", content = @Content(mediaType = "text/plain"))
     @ApiResponse(responseCode = "404", description = "Account not found. The specified account number does not exist.", content = @Content(mediaType = "text/plain"))
-    public ResponseEntity addNewAccount(@RequestBody Customer customer) throws InvalidAccountTypeException, URISyntaxException, AccountNotFoundException {
-        return ResponseEntity.ok(accountManagementService.addAccount(customer));
+    public ResponseEntity addNewAccount(@RequestBody CustomerCreationDto customerCreationDto) throws InvalidAccountTypeException, URISyntaxException, AccountNotFoundException {
+        return ResponseEntity.ok(accountManagementService.addAccount(customerCreationDto));
     }
 
     @GetMapping
@@ -45,7 +46,7 @@ public class AccountController {
 
     @GetMapping("/{accountNumber}")
     @Operation(summary = "Get Account by Account Number", description = "Retrieves an account based on its account number.")
-    @ApiResponse(responseCode = "200", description = "Successful operation. Returns the account details.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Customer.class)))
+    @ApiResponse(responseCode = "200", description = "Successful operation. Returns the account details.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = CustomerUpdateDto.class)))
     @ApiResponse(responseCode = "404", description = "Account not found. The specified account number does not exist.", content = @Content(mediaType = "text/plain"))
     public ResponseEntity getAccountByAccountNumber(@PathVariable String accountNumber) throws AccountNotFoundException {
         return ResponseEntity.ok(accountManagementService.getAccountByAccountNumber(accountNumber));
@@ -53,11 +54,11 @@ public class AccountController {
 
     @PutMapping
     @Operation(summary = "Update Account", description = "Updates an existing account.")
-    @ApiResponse(responseCode = "200", description = "Successful operation. Account updated.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Customer.class)))
+    @ApiResponse(responseCode = "200", description = "Successful operation. Account updated.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = CustomerUpdateDto.class)))
     @ApiResponse(responseCode = "400", description = "Invalid account type provided. The request is malformed.", content = @Content(mediaType = "text/plain"))
     @ApiResponse(responseCode = "404", description = "Account not found. The specified account number does not exist.", content = @Content(mediaType = "text/plain"))
-    public ResponseEntity updateAccount(@RequestBody Customer customer) throws InvalidAccountTypeException, AccountNotFoundException {
-        return ResponseEntity.ok(accountManagementService.updateAccount(customer));
+    public ResponseEntity updateAccount(@RequestBody CustomerUpdateDto customerUpdateDto) throws InvalidAccountTypeException, AccountNotFoundException {
+        return ResponseEntity.ok(accountManagementService.updateAccount(customerUpdateDto));
     }
 
     @PutMapping("/{accountNumber}/status")

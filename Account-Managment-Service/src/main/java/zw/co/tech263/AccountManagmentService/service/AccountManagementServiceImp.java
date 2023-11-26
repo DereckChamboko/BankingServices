@@ -8,8 +8,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
-import zw.co.tech263.AccountManagmentService.dto.Customer;
+import zw.co.tech263.AccountManagmentService.dto.request.CustomerCreationDto;
+import zw.co.tech263.AccountManagmentService.dto.request.CustomerUpdateDto;
 import zw.co.tech263.AccountManagmentService.dto.StatusUpdate;
+import zw.co.tech263.AccountManagmentService.dto.messaging.CustomerSupportAccountMessage;
+import zw.co.tech263.AccountManagmentService.dto.messaging.NotificationMessage;
 import zw.co.tech263.AccountManagmentService.exception.AccountNotFoundException;
 import zw.co.tech263.AccountManagmentService.exception.InvalidAccountTypeException;
 import zw.co.tech263.AccountManagmentService.exception.InvalidStatusException;
@@ -30,7 +33,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 
 @Service
-public class AccountManagementServiceImp implements AccountManagementService{
+public class AccountManagementServiceImp {
 
 
     @Autowired
@@ -39,17 +42,32 @@ public class AccountManagementServiceImp implements AccountManagementService{
     @Autowired
     RestTemplate restTemplate;
 
-    @Override
-    public CustomerAccount addAccount(Customer account) throws InvalidAccountTypeException, AccountNotFoundException, URISyntaxException {
+
+    @Autowired
+    MessagingService messagingService;
+
+
+    public CustomerAccount addAccount(CustomerCreationDto account) throws InvalidAccountTypeException, AccountNotFoundException, URISyntaxException {
 
             CustomerAccount customerAccount=CustomerAccount.builder()
                     .firstName(account.getFirstName())
                     .lastName(account.getLastName())
                     .address(account.getAddress())
                     .accountStatus(AccountStatus.ACTIVE)
-                    .accountType(getValidAccountType(account))
+                    .accountType(getValidAccountType(account.getAccountType()))
                     .build();
             customerAccount =accountRepository.save(customerAccount);
+
+            NotificationMessage message= NotificationMessage.builder()
+                    .accountNumber(customerAccount.getAccountNumber())
+                    .messageTittle("New account created-"+customerAccount.getAccountNumber())
+                    .message("We are excited to have you onboard")
+                    .build();
+            messagingService.sendNotification(message);
+            messagingService.createCustomerSupportAccount(new CustomerSupportAccountMessage(customerAccount.getAccountNumber()));
+
+
+
             addAccountToTransactionService(customerAccount.getAccountNumber());
             return customerAccount;
 
@@ -67,9 +85,9 @@ public class AccountManagementServiceImp implements AccountManagementService{
     }
 
 
-    public CustomerAccount updateAccount(Customer account) throws InvalidAccountTypeException ,AccountNotFoundException{
+    public CustomerAccount updateAccount(CustomerUpdateDto account) throws InvalidAccountTypeException ,AccountNotFoundException{
         CustomerAccount customerAccount=getAccountByAccountNumber(account.getAccountNumber());
-        customerAccount.setAccountType(getValidAccountType(account));
+        customerAccount.setAccountType(getValidAccountType(account.getAccountType()));
         customerAccount.setFirstName(Objects.requireNonNullElse(account.getFirstName(), customerAccount.getFirstName()));
         customerAccount.setLastName(Objects.requireNonNullElse(account.getLastName(), customerAccount.getLastName()));
         customerAccount.setAddress(Objects.requireNonNullElse(account.getAddress(), customerAccount.getAddress()));
@@ -99,18 +117,18 @@ public class AccountManagementServiceImp implements AccountManagementService{
             MultiValueMap<String, String> requestParams = new LinkedMultiValueMap<>();
             requestParams.add("accountNumber", accountNumber);
             HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(requestParams, headers);
-            restTemplate.postForObject(uri, requestEntity, Customer.class);
+            restTemplate.postForObject(uri, requestEntity, CustomerUpdateDto.class);
 
     }
 
-    private AccountType getValidAccountType(Customer account) throws InvalidAccountTypeException {
-        if(account.getAccountType()!=null) {
+    private AccountType getValidAccountType(String accountTypeToValidate) throws InvalidAccountTypeException {
+        if(accountTypeToValidate!=null) {
             boolean isValidAccountType = Arrays.stream(AccountType.values())
-                    .anyMatch(accountType -> accountType.name().equals(account.getAccountType()));
+                    .anyMatch(accountType -> accountType.name().equals(accountTypeToValidate));
             if (isValidAccountType) {
-                return AccountType.valueOf(account.getAccountType());
+                return AccountType.valueOf(accountTypeToValidate);
             }
-            throw new InvalidAccountTypeException("Invalid account type:" + account.getAccountType() + ". expecting any of the following " + Arrays.toString(AccountType.values()));
+            throw new InvalidAccountTypeException("Invalid account type:" + accountTypeToValidate + ". expecting any of the following " + Arrays.toString(AccountType.values()));
 
         }
         throw new InvalidAccountTypeException("Missing account type .Was expecting any of the following " + Arrays.toString(AccountType.values()));

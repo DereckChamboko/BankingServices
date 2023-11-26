@@ -2,6 +2,7 @@ package zw.co.tech263.CustomerSupportService.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import zw.co.tech263.CustomerSupportService.dto.message.RabbitMQMessageOut;
 import zw.co.tech263.CustomerSupportService.dto.request.ActivityDTO;
 import zw.co.tech263.CustomerSupportService.dto.request.CommentDTO;
@@ -18,6 +19,7 @@ import java.util.List;
 
 
 @Service
+@Transactional
 public class TicketService {
     private final TicketRepository ticketRepository;
     private final CustomerAccountRepository customerAccountRepository;
@@ -49,7 +51,7 @@ public class TicketService {
 
         ticket=ticketRepository.save(ticket);
         RabbitMQMessageOut message=RabbitMQMessageOut.builder()
-                .messageTittle("New Ticket created")
+                .messageTittle("New Ticket created-"+ticket.getId())
                 .accountNumber(customerAccount.getAccountNumber())
                 .message("We have opened a new ticket with tittle "+ticket.getTitle()+" was opened. this ticket will be tracked with ticket ID:"+ticket.getId() )
                 .build();
@@ -75,14 +77,6 @@ public class TicketService {
                 .build();
         ticket=addActivityToTicket(ticketId,activity);
         ticket.setStatus(TicketStatus.RESOLVED);
-
-
-        RabbitMQMessageOut message=RabbitMQMessageOut.builder()
-                .messageTittle("Ticket "+ticketId+ " was resolved")
-                .accountNumber(ticket.getCustomerAccount().getAccountNumber())
-                .message("Ticket "+ticketId+ " was resolved with resolution "+reason )
-                .build();
-        notificationService.sendNotification(message);
         return ticketRepository.save(ticket);
     }
 
@@ -118,7 +112,16 @@ public class TicketService {
         listOfComments.add(commentRequest);
         ticket.setComments(listOfComments);
 
-        return ticketRepository.save(ticket);
+        ticket=ticketRepository.save(ticket);
+        RabbitMQMessageOut message=RabbitMQMessageOut.builder()
+                .messageTittle("Comment added to ticket-"+ticket.getId())
+                .accountNumber(ticket.getCustomerAccount().getAccountNumber())
+                .message("User "+comment.getUser()+" commented: "+comment.getCommentText()+" on ticket "+ticketId )
+                .build();
+        notificationService.sendNotification(message);
+        return ticket;
+
+
     }
 
     public Ticket addActivityToTicket(String ticketId, ActivityDTO activityDto) throws TicketNotFoundException {
@@ -138,7 +141,14 @@ public class TicketService {
         listOfActivitiess.add(activity);
         ticket.setActivities(listOfActivitiess);
 
-        return ticketRepository.save(ticket);
+        ticket= ticketRepository.save(ticket);
+        RabbitMQMessageOut message=RabbitMQMessageOut.builder()
+                .messageTittle("Activity on ticket-"+ticket.getId())
+                .accountNumber(ticket.getCustomerAccount().getAccountNumber())
+                .message("User "+activityDto.getUser()+" made an activity : "+ activityDto.getDescription()+" on ticket "+ticketId )
+                .build();
+        notificationService.sendNotification(message);
+        return ticket;
     }
 
     public Ticket getTicketById(String ticketId) throws TicketNotFoundException {

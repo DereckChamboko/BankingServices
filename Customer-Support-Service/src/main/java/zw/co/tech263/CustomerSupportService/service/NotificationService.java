@@ -4,7 +4,7 @@ package zw.co.tech263.CustomerSupportService.service;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import zw.co.tech263.CustomerSupportService.config.RabbitMQConfig;
+import zw.co.tech263.CustomerSupportService.RabbitMQConfig;
 import zw.co.tech263.CustomerSupportService.dto.message.RabbitMQMessageOut;
 
 
@@ -17,7 +17,7 @@ public class NotificationService {
 
 
     public void sendNotification(RabbitMQMessageOut rabbitMQMessageOut){
-        template.convertAndSend(RabbitMQConfig.EXCHANGE,
-                RabbitMQConfig.QUEUE_ROUTING_KEY, rabbitMQMessageOut);
+        template.convertAndSend(RabbitMQConfig.EXCHANGE_NAME,
+                RabbitMQConfig.ROUTING_KEY, rabbitMQMessageOut);
     }
 }
