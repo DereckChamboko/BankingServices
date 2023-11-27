@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import zw.co.tech263.AccountManagmentService.dto.request.CustomerCreationDto;
 import zw.co.tech263.AccountManagmentService.dto.request.CustomerUpdateDto;
 import zw.co.tech263.AccountManagmentService.dto.StatusUpdate;
+import zw.co.tech263.AccountManagmentService.dto.response.ErrorResponse;
 import zw.co.tech263.AccountManagmentService.exception.AccountNotFoundException;
 import zw.co.tech263.AccountManagmentService.exception.InvalidAccountTypeException;
 import zw.co.tech263.AccountManagmentService.exception.InvalidStatusException;
@@ -71,7 +72,12 @@ public class AccountController {
     }
 
     @ExceptionHandler({AccountNotFoundException.class, InvalidAccountTypeException.class, InvalidStatusException.class})
-    public ResponseEntity<String> handleAccountExceptions(Exception ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+    public ResponseEntity<ErrorResponse> handleAccountExceptions(Exception ex) {
+
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .errorDescription(ex.getMessage())
+                .errorCode("400")
+                .build();
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
     }
 }

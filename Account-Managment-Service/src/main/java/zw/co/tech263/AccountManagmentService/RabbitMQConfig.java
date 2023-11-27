@@ -5,19 +5,61 @@ import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.amqp.support.converter.MessageConverter;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class RabbitMQConfig {
 
-    public static final String NOTIFICATION_QUEUE = "Equals_Account_notification";
-    public static final String TRANSACTION_PROCESSING_QUEUE = "Equals_Transaction_processing";
-    public static final String CUSTOMER_SERVICES_QUEUE = "Equals_Account_customer_services";
-    public static final String EXCHANGE_NAME = "Equals.exchange";
-    public static final String NOTIFICATION_ROUTING_KEY = "Equals.customer.notification";
-    public static final String TRANSACTION_ROUTING_KEY = "Equals.customer.transactions";
-    public static final String CUSTOMER_SERVICES_ROUTING_KEY = "Equals.customer.services";
+    @Value("${notification.queue}")
+    private String NOTIFICATION_QUEUE;
+
+    @Value("${transaction.processing.queue}")
+    private String TRANSACTION_PROCESSING_QUEUE;
+
+    @Value("${customer.services.queue}")
+    private String CUSTOMER_SERVICES_QUEUE;
+
+    public String getNOTIFICATION_QUEUE() {
+        return NOTIFICATION_QUEUE;
+    }
+
+    public String getTRANSACTION_PROCESSING_QUEUE() {
+        return TRANSACTION_PROCESSING_QUEUE;
+    }
+
+    public String getCUSTOMER_SERVICES_QUEUE() {
+        return CUSTOMER_SERVICES_QUEUE;
+    }
+
+    public String getEXCHANGE_NAME() {
+        return EXCHANGE_NAME;
+    }
+
+    public String getNOTIFICATION_ROUTING_KEY() {
+        return NOTIFICATION_ROUTING_KEY;
+    }
+
+    public String getTRANSACTION_ROUTING_KEY() {
+        return TRANSACTION_ROUTING_KEY;
+    }
+
+    public String getCUSTOMER_SERVICES_ROUTING_KEY() {
+        return CUSTOMER_SERVICES_ROUTING_KEY;
+    }
+
+    @Value("${exchange.name}")
+    private String EXCHANGE_NAME;
+
+    @Value("${notification.routing.key}")
+    private String NOTIFICATION_ROUTING_KEY;
+
+    @Value("${transaction.routing.key}")
+    private String TRANSACTION_ROUTING_KEY;
+
+    @Value("${customer.services.routing.key}")
+    private String CUSTOMER_SERVICES_ROUTING_KEY;
 
     @Bean
     public Queue notificationQueue() {

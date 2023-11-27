@@ -31,7 +31,6 @@ public class CustomerAccount {
     private String address;
     private AccountType accountType;
 
-    private final BigDecimal accountBalance=new BigDecimal(0);
 
     private AccountStatus accountStatus;
 

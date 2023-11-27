@@ -5,27 +5,42 @@ import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.amqp.support.converter.MessageConverter;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import java.util.UUID;
-
 
 @Configuration
 public class RabbitMQConfig {
 
-    public static final String QUEUE_NAME = "Equals_Account_notification";
-    public static final String EXCHANGE_NAME = "Equals.exchange";
-    public static final String ROUTING_KEY = "Equals.customer.notification";
+    @Value("${rabbitmq.queue.name}")
+    public String queueName;
+
+    @Value("${rabbitmq.exchange.name}")
+    public String exchangeName;
+
+    public String getQueueName() {
+        return queueName;
+    }
+
+    public String getExchangeName() {
+        return exchangeName;
+    }
+
+    public String getRoutingKey() {
+        return routingKey;
+    }
+
+    @Value("${rabbitmq.routing.key}")
+    public String routingKey;
 
     @Bean
     public Queue queue() {
-        return new Queue(QUEUE_NAME);
+        return new Queue(queueName);
     }
 
     @Bean
     public TopicExchange exchange() {
-        return new TopicExchange(EXCHANGE_NAME);
+        return new TopicExchange(exchangeName);
     }
 
     @Bean
@@ -33,7 +48,7 @@ public class RabbitMQConfig {
         return BindingBuilder
                 .bind(queue)
                 .to(exchange)
-                .with(ROUTING_KEY);
+                .with(routingKey);
     }
 
     @Bean

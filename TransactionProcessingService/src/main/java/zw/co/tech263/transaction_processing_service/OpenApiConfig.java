@@ -1,4 +1,5 @@
-package zw.co.tech263.AccountManagmentService;
+package zw.co.tech263.transaction_processing_service;
+
 
 
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
@@ -16,8 +17,7 @@ public class OpenApiConfig {
     @Bean
     public OpenAPI baseOpenAPI(){
         return new OpenAPI()
-                .info(new Info().title("Account management service").version("0.0.1").description("Account related activity for Equals Banking"));
+                .info(new Info().title("Banking transactions service").version("0.0.1").description("Banking transaction related activity for Equals Banking"));
     }
-
 
 }

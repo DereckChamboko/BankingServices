@@ -17,26 +17,29 @@ public class MessagingService {
 
     private final RabbitTemplate template;
 
+    private final RabbitMQConfig rabbitMQConfig;
+
 
     @Autowired
-    public MessagingService(RabbitTemplate template){
+    public MessagingService(RabbitTemplate template,RabbitMQConfig rabbitMQConfig){
         this.template=template;
+        this.rabbitMQConfig=rabbitMQConfig;
 
     }
 
 
     public void sendNotification(NotificationMessage notificationMessage){
-        template.convertAndSend(RabbitMQConfig.EXCHANGE_NAME,
-                RabbitMQConfig.NOTIFICATION_ROUTING_KEY, notificationMessage);
+        template.convertAndSend(rabbitMQConfig.getEXCHANGE_NAME(),
+                rabbitMQConfig.getNOTIFICATION_ROUTING_KEY(), notificationMessage);
     }
 
     public void createCustomerSupportAccount(CustomerSupportAccountMessage message){
-        template.convertAndSend(RabbitMQConfig.EXCHANGE_NAME,
-                RabbitMQConfig.CUSTOMER_SERVICES_ROUTING_KEY, message);
+        template.convertAndSend(rabbitMQConfig.getEXCHANGE_NAME(),
+                rabbitMQConfig.getCUSTOMER_SERVICES_ROUTING_KEY(), message);
     }
 
     public void createTransactionServiceAccount(TransactionServiceMessage message){
-        template.convertAndSend(RabbitMQConfig.EXCHANGE_NAME,
-                RabbitMQConfig.TRANSACTION_ROUTING_KEY, message);
+        template.convertAndSend(rabbitMQConfig.getEXCHANGE_NAME(),
+                rabbitMQConfig.getTRANSACTION_ROUTING_KEY(), message);
     }
 }
